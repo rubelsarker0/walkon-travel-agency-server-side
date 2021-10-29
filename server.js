@@ -33,8 +33,6 @@ const run = async () => {
 			const cursor = destinationCollections.find({});
 			const allDestinations = await cursor.toArray();
 			res.send(allDestinations);
-
-			res.send('hello from simple server :)');
 		});
 
 		//get specific destination
