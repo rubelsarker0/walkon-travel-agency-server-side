@@ -50,6 +50,110 @@ const run = async () => {
 			const result = await destinationCollections.insertOne(destinationData);
 			res.json(result);
 		});
+
+		//Bookings end points
+		app.get('/api/Orders', async (req, res) => {
+			const cursor = bookingOrderCollection.find({});
+
+			const allOrders = await cursor.toArray();
+			res.json(allOrders);
+		});
+
+		app.get('/api/orders/:uid', async (req, res) => {
+			const uid = req.params.uid;
+			const query = { uid: uid };
+
+			const cursor = bookingOrderCollection.find(query);
+
+			if ((await cursor.count()) === 0) {
+				return res.json([]);
+			}
+
+			const result = await cursor.toArray();
+			res.send(result.reverse());
+		});
+
+		// Create new destinations
+
+		app.post('/api/booking/newOrder', async (req, res) => {
+			const {
+				price,
+				place,
+				email,
+				uid,
+				phone,
+				paymentMethod,
+				message,
+				status,
+				author,
+			} = req.body;
+
+			const bookingData = {
+				uid,
+				email,
+				phone,
+				paymentMethod,
+				message,
+				status,
+				price,
+				place,
+				date: new Date().toDateString(),
+				author,
+			};
+			const Result = await bookingOrderCollection.insertOne(bookingData);
+
+			res.json(Result);
+		});
+
+		// DELETE API
+		app.delete('/api/order/delete/:id', async (req, res) => {
+			const id = req.params.id;
+			const query = { _id: ObjectId(id) };
+			const result = await bookingOrderCollection.deleteOne(query);
+
+			res.json(result);
+		});
+
+		// Update Api
+
+		// update order status pending to approved
+
+		app.put('/api/order/update/status/:id', async (req, res) => {
+			const id = req.params.id;
+			const filter = { _id: ObjectId(id) };
+			const options = { upsert: true };
+			const updateDoc = {
+				$set: {
+					status: 'Approved',
+				},
+			};
+			const result = await bookingOrderCollection.updateOne(
+				filter,
+				updateDoc,
+				options
+			);
+			res.json(result);
+		});
+
+		app.put('/api/order/cancel/:id', async (req, res) => {
+			const id = req.params.id;
+
+			const filter = { _id: ObjectId(id) };
+
+			const updateDoc = {
+				$set: {
+					status: 'Cancelled',
+				},
+			};
+			const options = { upsert: true };
+
+			const result = await bookingOrderCollection.updateOne(
+				filter,
+				updateDoc,
+				options
+			);
+			res.json(result);
+		});
 	} finally {
 		// await client.close()
 	}
